@@ -1,23 +1,25 @@
 package com.beta.expedition.model;
 
-import jakarta.persistence.*;
+import com.beta.expedition.model.enums.ContractStatus;
 import lombok.*;
 
-@Entity
-@Table(name = "carrier_contracts")
-@Getter @Setter @NoArgsConstructor
-public class CarrierContract extends AbstractContract {
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.UUID;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "carrier_id")
-    private AppUser carrier;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "application_id")
-    private CarrierApplication application;
-
-    @Override
-    public AppUser getCounterparty() {
-        return carrier;
-    }
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @ToString
+public class CarrierContract {
+    private UUID id;
+    private UUID orderId;
+    private UUID forwarderId;
+    private UUID carrierId;
+    private UUID applicationId;
+    private BigDecimal price;
+    private String terms;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private ContractStatus status = ContractStatus.PENDING;
+    private UUID createdById;
+    private Instant createdAt;
 }

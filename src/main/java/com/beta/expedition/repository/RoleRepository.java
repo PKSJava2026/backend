@@ -2,11 +2,33 @@ package com.beta.expedition.repository;
 
 import com.beta.expedition.model.Role;
 import com.beta.expedition.model.enums.RoleName;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
-public interface RoleRepository extends JpaRepository<Role, Short> {
+@Repository
+public class RoleRepository {
 
-    Optional<Role> findByName(RoleName name);
+    private final JdbcTemplate jdbcTemplate;
+
+    public RoleRepository(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    private final RowMapper<Role> mapper = (rs, rowNum) -> new Role(
+        rs.getShort("role_id"),
+        RoleName.valueOf(rs.getString("name"))
+    );
+
+    public List<Role> findAll() {
+        return jdbcTemplate.query("SELECT * FROM roles", mapper);
+    }
+
+    public Optional<Role> findByName(RoleName name) {
+        return jdbcTemplate.query("SELECT * FROM roles WHERE name = ?", mapper, name.name())
+                .stream().findFirst();
+    }
 }

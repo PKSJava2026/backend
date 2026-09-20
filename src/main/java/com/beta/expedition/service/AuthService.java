@@ -68,7 +68,8 @@ public class AuthService {
                 || !passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new AuthException("Invalid nickname or password");
         }
-        return new AuthenticatedUser(user.getId(), user.getFullName(), user.getRole().getName());
+        RoleName roleName = resolveRoleName(user.getRoleId());
+        return new AuthenticatedUser(user.getId(), user.getFullName(), roleName);
     }
 
     public void createForwarder(AuthenticatedUser actor, String nickname, String email, String password) {
@@ -106,13 +107,22 @@ public class AuthService {
         user.setFullName(nickname);
         user.setEmail(normalizedEmail);
         user.setPasswordHash(passwordEncoder.encode(password));
-        user.setRole(role);
+        user.setRoleId(role.getId());
+        user.setActive(true);
 
         try {
-            return users.saveAndFlush(user).getId();
+            return users.save(user).getId();
         } catch (DataIntegrityViolationException e) {
             throw new AuthException("This nickname or email is already taken");
         }
+    }
+
+    private RoleName resolveRoleName(Short roleId) {
+        return roles.findAll().stream()
+                .filter(r -> r.getId().equals(roleId))
+                .map(Role::getName)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Role not found for id: " + roleId));
     }
 
     private boolean isAdminCredentials(String nickname, String password) {
