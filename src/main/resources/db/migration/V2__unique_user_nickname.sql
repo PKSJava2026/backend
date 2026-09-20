@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX ux_users_full_name_lower ON users (lower(full_name));
