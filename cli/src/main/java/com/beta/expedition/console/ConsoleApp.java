@@ -1,22 +1,19 @@
 package com.beta.expedition.console;
 
 import com.beta.expedition.exception.BusinessException;
-import com.beta.expedition.exception.DatabaseException;
-import com.beta.expedition.exception.EntityNotFoundException;
 import com.beta.expedition.model.Role;
 import com.beta.expedition.model.User;
 import com.beta.expedition.service.AuthService;
 
-import java.util.List;
-
-public class ConsoleApp {
+public class ConsoleApp extends Menu {
 
     private final AuthService authService;
-    private final Input input;
+    private final CustomerMenu customerMenu;
 
-    public ConsoleApp(AuthService authService, Input input) {
+    public ConsoleApp(Input input, AuthService authService, CustomerMenu customerMenu) {
+        super(input);
         this.authService = authService;
-        this.input = input;
+        this.customerMenu = customerMenu;
     }
 
     public void run() {
@@ -71,6 +68,8 @@ public class ConsoleApp {
         System.out.println("Добро пожаловать, " + user.getNickname() + "!");
         if (user.getRole() == Role.ADMIN) {
             adminMenu(user);
+        } else if (user.getRole() == Role.CUSTOMER) {
+            customerMenu.run(user);
         } else {
             // ponytail: меню ролей добавляются по мере реализации функций (заявки, договоры и т.д.)
             while (true) {
@@ -117,22 +116,5 @@ public class ConsoleApp {
     private void removeForwarder(User admin) {
         authService.removeForwarder(admin, input.promptId("ID экспедитора: "));
         System.out.println("Экспедитор удалён");
-    }
-
-    private void printList(List<?> items) {
-        if (items.isEmpty()) {
-            System.out.println("Список пуст");
-            return;
-        }
-        items.forEach(System.out::println);
-    }
-
-    /** Ошибки бизнес-правил и БД не должны завершать программу. */
-    private void safely(Runnable action) {
-        try {
-            action.run();
-        } catch (BusinessException | EntityNotFoundException | DatabaseException e) {
-            System.out.println("Ошибка: " + e.getMessage());
-        }
     }
 }
