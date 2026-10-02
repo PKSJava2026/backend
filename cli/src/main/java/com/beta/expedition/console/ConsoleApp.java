@@ -11,14 +11,16 @@ public class ConsoleApp extends Menu {
     private final CustomerMenu customerMenu;
     private final ForwarderMenu forwarderMenu;
     private final CarrierMenu carrierMenu;
+    private final ReportMenu reportMenu;
 
     public ConsoleApp(Input input, AuthService authService, CustomerMenu customerMenu,
-                      ForwarderMenu forwarderMenu, CarrierMenu carrierMenu) {
+                      ForwarderMenu forwarderMenu, CarrierMenu carrierMenu, ReportMenu reportMenu) {
         super(input);
         this.authService = authService;
         this.customerMenu = customerMenu;
         this.forwarderMenu = forwarderMenu;
         this.carrierMenu = carrierMenu;
+        this.reportMenu = reportMenu;
     }
 
     public void run() {
@@ -87,6 +89,7 @@ public class ConsoleApp extends Menu {
             System.out.println("2. Список экспедиторов");
             System.out.println("3. Удалить экспедитора");
             System.out.println("4. Функции экспедитора");
+            System.out.println("5. Статистика и экспорт данных");
             System.out.println("0. Выйти из аккаунта");
 
             switch (input.prompt("Выберите действие: ")) {
@@ -94,6 +97,7 @@ public class ConsoleApp extends Menu {
                 case "2" -> safely(() -> printList(authService.listForwarders(admin)));
                 case "3" -> safely(() -> removeForwarder(admin));
                 case "4" -> forwarderMenu.run(admin);
+                case "5" -> reportMenu.run();
                 case "0" -> {
                     return;
                 }

@@ -2,6 +2,7 @@ package com.beta.expedition.repository;
 
 import com.beta.expedition.exception.DatabaseException;
 import com.beta.expedition.model.Rating;
+import com.beta.expedition.model.RatingSummary;
 import com.beta.expedition.util.DatabaseManager;
 
 import java.sql.Connection;
@@ -70,6 +71,18 @@ public class RatingRepository {
             }
         } catch (SQLException e) {
             throw new DatabaseException("Не удалось получить оценки: " + e.getMessage(), e);
+        }
+    }
+
+    public RatingSummary summaryAll() {
+        String sql = "SELECT count(*), coalesce(avg(score), 0) FROM ratings";
+        try (Connection connection = db.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            rs.next();
+            return new RatingSummary(rs.getInt(1), rs.getDouble(2));
+        } catch (SQLException e) {
+            throw new DatabaseException("Не удалось посчитать оценки: " + e.getMessage(), e);
         }
     }
 
