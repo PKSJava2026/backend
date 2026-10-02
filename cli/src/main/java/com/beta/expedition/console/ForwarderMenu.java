@@ -13,10 +13,11 @@ public class ForwarderMenu extends Menu {
     private final NotificationMenu notificationMenu;
     private final OrderQueryMenu orderQueryMenu;
     private final RatingMenu ratingMenu;
+    private final CooperationMenu cooperationMenu;
 
     public ForwarderMenu(Input input, OrderService orderService, ContractMenu customerContracts,
                          ContractMenu carrierContracts, NotificationMenu notificationMenu,
-                         RatingMenu ratingMenu) {
+                         RatingMenu ratingMenu, CooperationMenu cooperationMenu) {
         super(input);
         this.orderService = orderService;
         this.customerContracts = customerContracts;
@@ -24,6 +25,7 @@ public class ForwarderMenu extends Menu {
         this.notificationMenu = notificationMenu;
         this.orderQueryMenu = new OrderQueryMenu(input, orderService);
         this.ratingMenu = ratingMenu;
+        this.cooperationMenu = cooperationMenu;
     }
 
     public void run(User forwarder) {
@@ -39,6 +41,7 @@ public class ForwarderMenu extends Menu {
             System.out.println("7. Поиск, фильтрация, сортировка заявок");
             System.out.println("8. Оценить доставку груза");
             System.out.println("9. Мой рейтинг");
+            System.out.println("10. Заявки перевозчиков о сотрудничестве");
             System.out.println("0. Назад");
 
             switch (input.prompt("Выберите действие: ")) {
@@ -51,6 +54,7 @@ public class ForwarderMenu extends Menu {
                 case "7" -> orderQueryMenu.run();
                 case "8" -> ratingMenu.rateDeliveryAsForwarder(forwarder);
                 case "9" -> ratingMenu.showOwnRating(forwarder);
+                case "10" -> cooperationMenu.runForForwarder(forwarder);
                 case "0" -> {
                     return;
                 }

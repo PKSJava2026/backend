@@ -18,7 +18,7 @@ import java.util.Optional;
 
 public abstract class ContractRepository<T extends AbstractContract> {
 
-    private final DatabaseManager db;
+    protected final DatabaseManager db;
 
     protected ContractRepository(DatabaseManager db) {
         this.db = db;
