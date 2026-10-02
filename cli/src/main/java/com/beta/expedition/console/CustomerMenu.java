@@ -10,10 +10,12 @@ import java.time.LocalDate;
 public class CustomerMenu extends Menu {
 
     private final OrderService orderService;
+    private final ContractMenu contracts;
 
-    public CustomerMenu(Input input, OrderService orderService) {
+    public CustomerMenu(Input input, OrderService orderService, ContractMenu contracts) {
         super(input);
         this.orderService = orderService;
+        this.contracts = contracts;
     }
 
     public void run(User customer) {
@@ -26,6 +28,7 @@ public class CustomerMenu extends Menu {
             System.out.println("4. Изменить заявку");
             System.out.println("5. Отменить заявку");
             System.out.println("6. Удалить заявку");
+            System.out.println("7. Мои договоры");
             System.out.println("0. Выйти из аккаунта");
 
             switch (input.prompt("Выберите действие: ")) {
@@ -35,6 +38,7 @@ public class CustomerMenu extends Menu {
                 case "4" -> safely(() -> updateOrder(customer));
                 case "5" -> safely(() -> cancelOrder(customer));
                 case "6" -> safely(() -> deleteOrder(customer));
+                case "7" -> contracts.run(customer);
                 case "0" -> {
                     return;
                 }
