@@ -63,6 +63,10 @@ public class RatingService {
         return ratings.findByToUserId(userId);
     }
 
+    public RatingSummary overallSummary() {
+        return ratings.summaryAll();
+    }
+
     public RatingSummary summary(long userId) {
         List<Rating> received = ratings.findByToUserId(userId);
         double average = received.stream().mapToInt(Rating::getScore).average().orElse(0);

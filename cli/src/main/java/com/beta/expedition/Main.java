@@ -9,6 +9,7 @@ import com.beta.expedition.console.ForwarderMenu;
 import com.beta.expedition.console.Input;
 import com.beta.expedition.console.NotificationMenu;
 import com.beta.expedition.console.RatingMenu;
+import com.beta.expedition.console.ReportMenu;
 import com.beta.expedition.exception.DatabaseException;
 import com.beta.expedition.model.CarrierContract;
 import com.beta.expedition.model.ContractKind;
@@ -22,6 +23,7 @@ import com.beta.expedition.repository.CustomerContractRepository;
 import com.beta.expedition.repository.NotificationRepository;
 import com.beta.expedition.repository.OrderRepository;
 import com.beta.expedition.repository.RatingRepository;
+import com.beta.expedition.repository.TableRepository;
 import com.beta.expedition.repository.UserRepository;
 import com.beta.expedition.service.AuthService;
 import com.beta.expedition.service.CarrierDirectory;
@@ -30,6 +32,7 @@ import com.beta.expedition.service.CooperationService;
 import com.beta.expedition.service.NotificationService;
 import com.beta.expedition.service.OrderService;
 import com.beta.expedition.service.RatingService;
+import com.beta.expedition.service.ReportService;
 import com.beta.expedition.util.DatabaseManager;
 
 public class Main {
@@ -76,7 +79,11 @@ public class Main {
         CooperationService cooperationService = new CooperationService(new CooperationRequestRepository(db),
                 carrierContracts, carrierContractRepository);
 
+        ReportService reportService = new ReportService(orderService, customerContracts, carrierContracts,
+                ratingService, new TableRepository(db));
+
         Input input = new Input();
+        ReportMenu reportMenu = new ReportMenu(input, reportService);
         CooperationMenu cooperationMenu = new CooperationMenu(input, cooperationService);
         RatingMenu ratingMenu = new RatingMenu(input, ratingService);
         NotificationMenu notificationMenu = new NotificationMenu(input, notificationService);
@@ -85,10 +92,10 @@ public class Main {
         ForwarderMenu forwarderMenu = new ForwarderMenu(input, orderService,
                 new ContractMenu(input, customerContracts, Party.FORWARDER),
                 new ContractMenu(input, carrierContracts, Party.FORWARDER), notificationMenu, ratingMenu,
-                cooperationMenu);
+                cooperationMenu, reportMenu);
         CarrierMenu carrierMenu = new CarrierMenu(input,
                 new ContractMenu(input, carrierContracts, Party.COUNTERPARTY), notificationMenu, ratingMenu,
                 cooperationMenu);
-        new ConsoleApp(input, authService, customerMenu, forwarderMenu, carrierMenu).run();
+        new ConsoleApp(input, authService, customerMenu, forwarderMenu, carrierMenu, reportMenu).run();
     }
 }
