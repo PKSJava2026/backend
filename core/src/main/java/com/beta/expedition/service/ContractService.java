@@ -7,6 +7,7 @@ import com.beta.expedition.model.ChangeRequestStatus;
 import com.beta.expedition.model.ChangeRequestType;
 import com.beta.expedition.model.ContractChangeRequest;
 import com.beta.expedition.model.ContractKind;
+import com.beta.expedition.model.ContractSort;
 import com.beta.expedition.model.ContractStatus;
 import com.beta.expedition.model.Order;
 import com.beta.expedition.model.OrderStatus;
@@ -16,6 +17,7 @@ import com.beta.expedition.repository.ContractRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.LongFunction;
 
@@ -124,6 +126,30 @@ public class ContractService<T extends AbstractContract> {
 
     public List<T> listByStatus(ContractStatus status) {
         return contracts.findByStatus(status);
+    }
+
+    public List<T> searchByCreatedDate(LocalDate date) {
+        return contracts.findAll().stream().filter(c -> c.getCreatedDate().equals(date)).toList();
+    }
+
+    public List<T> searchByOrder(long orderId) {
+        return contracts.findByOrderId(orderId);
+    }
+
+    public List<T> filter(ContractStatus status, LocalDate from, LocalDate to) {
+        if (from != null && to != null && to.isBefore(from)) {
+            throw new BusinessException("Конец периода раньше его начала");
+        }
+        return contracts.findAll().stream()
+                .filter(c -> status == null || c.getStatus() == status)
+                .filter(c -> from == null || !c.getCreatedDate().isBefore(from))
+                .filter(c -> to == null || !c.getCreatedDate().isAfter(to))
+                .toList();
+    }
+
+    public List<T> listSorted(ContractSort sort, boolean descending) {
+        Comparator<AbstractContract> comparator = descending ? sort.comparator().reversed() : sort.comparator();
+        return contracts.findAll().stream().sorted(comparator).toList();
     }
 
     public List<T> listForCounterparty(long counterpartyId) {

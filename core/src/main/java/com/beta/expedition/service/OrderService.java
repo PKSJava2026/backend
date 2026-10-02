@@ -3,6 +3,7 @@ package com.beta.expedition.service;
 import com.beta.expedition.exception.BusinessException;
 import com.beta.expedition.exception.EntityNotFoundException;
 import com.beta.expedition.model.Order;
+import com.beta.expedition.model.OrderSort;
 import com.beta.expedition.model.OrderStatus;
 import com.beta.expedition.repository.OrderRepository;
 
@@ -39,6 +40,33 @@ public class OrderService {
         return orders.findAll().stream()
                 .filter(o -> o.getStatus() != OrderStatus.DELIVERED && o.getStatus() != OrderStatus.CANCELLED)
                 .toList();
+    }
+
+    public List<Order> search(String text) {
+        if (text == null || text.isBlank()) {
+            throw new BusinessException("Введите текст для поиска");
+        }
+        String needle = text.trim().toLowerCase();
+        return orders.findAll().stream()
+                .filter(o -> o.getCargoDescription().toLowerCase().contains(needle)
+                        || o.getOrigin().toLowerCase().contains(needle)
+                        || o.getDestination().toLowerCase().contains(needle))
+                .toList();
+    }
+
+    public List<Order> filter(OrderStatus status, LocalDate from, LocalDate to) {
+        if (from != null && to != null && to.isBefore(from)) {
+            throw new BusinessException("Конец периода раньше его начала");
+        }
+        return orders.findAll().stream()
+                .filter(o -> status == null || o.getStatus() == status)
+                .filter(o -> from == null || !o.getCreatedDate().isBefore(from))
+                .filter(o -> to == null || !o.getCreatedDate().isAfter(to))
+                .toList();
+    }
+
+    public List<Order> listSorted(OrderSort sort, boolean descending) {
+        return orders.findAll().stream().sorted(sort.comparator(descending)).toList();
     }
 
     public List<Order> listByCustomer(long customerId) {

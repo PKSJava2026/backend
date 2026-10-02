@@ -11,11 +11,13 @@ public class ContractMenu extends Menu {
 
     private final ContractService<?> service;
     private final Party party;
+    private final ContractQueryMenu queryMenu;
 
     public ContractMenu(Input input, ContractService<?> service, Party party) {
         super(input);
         this.service = service;
         this.party = party;
+        this.queryMenu = new ContractQueryMenu(input, service);
     }
 
     public void run(User user) {
@@ -33,6 +35,7 @@ public class ContractMenu extends Menu {
             System.out.println("8. Отозвать мой запрос");
             if (forwarder) {
                 System.out.println("9. Заключить договор (предложить)");
+                System.out.println("10. Поиск, фильтрация, сортировка");
             } else {
                 System.out.println("9. Подтвердить предложенный договор");
                 System.out.println("10. Отклонить предложенный договор");
@@ -59,7 +62,7 @@ public class ContractMenu extends Menu {
                 });
                 case "10" -> safely(() -> {
                     if (forwarder) {
-                        System.out.println("Ошибка: нет такого пункта меню");
+                        queryMenu.run();
                     } else {
                         rejectContract(user);
                     }
