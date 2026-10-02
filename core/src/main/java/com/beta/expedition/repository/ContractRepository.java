@@ -109,11 +109,20 @@ public abstract class ContractRepository<T extends AbstractContract> {
         return findList("SELECT * FROM " + table() + " WHERE status = ? ORDER BY id", status.name());
     }
 
-    private List<T> findList(String sql, String parameter) {
+    public List<T> findByOrderId(long orderId) {
+        return findList("SELECT * FROM " + table() + " WHERE order_id = ? ORDER BY id", orderId);
+    }
+
+    public List<T> findByCounterpartyId(long counterpartyId) {
+        return findList("SELECT * FROM " + table() + " WHERE " + counterpartyColumn() + " = ? ORDER BY id",
+                counterpartyId);
+    }
+
+    private List<T> findList(String sql, Object parameter) {
         try (Connection connection = db.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             if (parameter != null) {
-                statement.setString(1, parameter);
+                statement.setObject(1, parameter);
             }
             try (ResultSet rs = statement.executeQuery()) {
                 List<T> result = new ArrayList<>();

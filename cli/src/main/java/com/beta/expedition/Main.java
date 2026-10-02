@@ -1,12 +1,25 @@
 package com.beta.expedition;
 
+import com.beta.expedition.console.CarrierMenu;
 import com.beta.expedition.console.ConsoleApp;
+import com.beta.expedition.console.ContractMenu;
 import com.beta.expedition.console.CustomerMenu;
+import com.beta.expedition.console.ForwarderMenu;
 import com.beta.expedition.console.Input;
 import com.beta.expedition.exception.DatabaseException;
+import com.beta.expedition.model.CarrierContract;
+import com.beta.expedition.model.ContractKind;
+import com.beta.expedition.model.CustomerContract;
+import com.beta.expedition.model.Party;
+import com.beta.expedition.model.Role;
+import com.beta.expedition.repository.CarrierContractRepository;
+import com.beta.expedition.repository.ContractChangeRequestRepository;
+import com.beta.expedition.repository.CustomerContractRepository;
 import com.beta.expedition.repository.OrderRepository;
 import com.beta.expedition.repository.UserRepository;
 import com.beta.expedition.service.AuthService;
+import com.beta.expedition.service.CarrierDirectory;
+import com.beta.expedition.service.ContractService;
 import com.beta.expedition.service.OrderService;
 import com.beta.expedition.util.DatabaseManager;
 
@@ -21,9 +34,37 @@ public class Main {
             return;
         }
 
-        Input input = new Input();
-        AuthService authService = new AuthService(new UserRepository(db));
+        UserRepository users = new UserRepository(db);
+        AuthService authService = new AuthService(users);
         OrderService orderService = new OrderService(new OrderRepository(db));
-        new ConsoleApp(input, authService, new CustomerMenu(input, orderService)).run();
+        CarrierDirectory carriers = id -> users.findById(id)
+                .filter(user -> user.isActive() && user.getRole() == Role.CARRIER)
+                .isPresent();
+        ContractChangeRequestRepository requests = new ContractChangeRequestRepository(db);
+
+        ContractService<CustomerContract> customerContracts = new ContractService<>(
+                ContractKind.CUSTOMER, new CustomerContractRepository(db), requests, orderService, carriers,
+                customerId -> {
+                    CustomerContract contract = new CustomerContract();
+                    contract.setCustomerId(customerId);
+                    return contract;
+                });
+        ContractService<CarrierContract> carrierContracts = new ContractService<>(
+                ContractKind.CARRIER, new CarrierContractRepository(db), requests, orderService, carriers,
+                carrierId -> {
+                    CarrierContract contract = new CarrierContract();
+                    contract.setCarrierId(carrierId);
+                    return contract;
+                });
+
+        Input input = new Input();
+        CustomerMenu customerMenu = new CustomerMenu(input, orderService,
+                new ContractMenu(input, customerContracts, Party.COUNTERPARTY));
+        ForwarderMenu forwarderMenu = new ForwarderMenu(input, orderService,
+                new ContractMenu(input, customerContracts, Party.FORWARDER),
+                new ContractMenu(input, carrierContracts, Party.FORWARDER));
+        CarrierMenu carrierMenu = new CarrierMenu(input,
+                new ContractMenu(input, carrierContracts, Party.COUNTERPARTY));
+        new ConsoleApp(input, authService, customerMenu, forwarderMenu, carrierMenu).run();
     }
 }

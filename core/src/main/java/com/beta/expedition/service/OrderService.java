@@ -27,6 +27,20 @@ public class OrderService {
         return orders.save(order);
     }
 
+    public Order getById(long orderId) {
+        return orders.findById(orderId).orElseThrow(() -> new EntityNotFoundException("Заявка", orderId));
+    }
+
+    public List<Order> listAll() {
+        return orders.findAll();
+    }
+
+    public List<Order> listActive() {
+        return orders.findAll().stream()
+                .filter(o -> o.getStatus() != OrderStatus.DELIVERED && o.getStatus() != OrderStatus.CANCELLED)
+                .toList();
+    }
+
     public List<Order> listByCustomer(long customerId) {
         return orders.findByCustomerId(customerId);
     }
@@ -62,6 +76,10 @@ public class OrderService {
     public void delete(long customerId, long orderId) {
         requireNew(getOwn(customerId, orderId), "удалить");
         orders.delete(orderId);
+    }
+
+    public void changeStatus(long orderId, OrderStatus next) {
+        changeStatus(getById(orderId), next);
     }
 
     public void changeStatus(Order order, OrderStatus next) {

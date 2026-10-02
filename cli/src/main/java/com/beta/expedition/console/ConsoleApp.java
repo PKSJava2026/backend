@@ -9,11 +9,16 @@ public class ConsoleApp extends Menu {
 
     private final AuthService authService;
     private final CustomerMenu customerMenu;
+    private final ForwarderMenu forwarderMenu;
+    private final CarrierMenu carrierMenu;
 
-    public ConsoleApp(Input input, AuthService authService, CustomerMenu customerMenu) {
+    public ConsoleApp(Input input, AuthService authService, CustomerMenu customerMenu,
+                      ForwarderMenu forwarderMenu, CarrierMenu carrierMenu) {
         super(input);
         this.authService = authService;
         this.customerMenu = customerMenu;
+        this.forwarderMenu = forwarderMenu;
+        this.carrierMenu = carrierMenu;
     }
 
     public void run() {
@@ -66,21 +71,11 @@ public class ConsoleApp extends Menu {
     private void openUserMenu(User user) {
         System.out.println();
         System.out.println("Добро пожаловать, " + user.getNickname() + "!");
-        if (user.getRole() == Role.ADMIN) {
-            adminMenu(user);
-        } else if (user.getRole() == Role.CUSTOMER) {
-            customerMenu.run(user);
-        } else {
-            // ponytail: меню ролей добавляются по мере реализации функций (заявки, договоры и т.д.)
-            while (true) {
-                System.out.println();
-                System.out.println("Вы вошли как " + user.getNickname() + " (" + user.getRole() + ")");
-                System.out.println("0. Выйти из аккаунта");
-                if (input.prompt("Выберите действие: ").equals("0")) {
-                    return;
-                }
-                System.out.println("Ошибка: нет такого пункта меню");
-            }
+        switch (user.getRole()) {
+            case ADMIN -> adminMenu(user);
+            case CUSTOMER -> customerMenu.run(user);
+            case FORWARDER -> forwarderMenu.run(user);
+            case CARRIER -> carrierMenu.run(user);
         }
     }
 
@@ -91,12 +86,14 @@ public class ConsoleApp extends Menu {
             System.out.println("1. Назначить экспедитора");
             System.out.println("2. Список экспедиторов");
             System.out.println("3. Удалить экспедитора");
+            System.out.println("4. Функции экспедитора");
             System.out.println("0. Выйти из аккаунта");
 
             switch (input.prompt("Выберите действие: ")) {
                 case "1" -> safely(() -> addForwarder(admin));
                 case "2" -> safely(() -> printList(authService.listForwarders(admin)));
                 case "3" -> safely(() -> removeForwarder(admin));
+                case "4" -> forwarderMenu.run(admin);
                 case "0" -> {
                     return;
                 }
