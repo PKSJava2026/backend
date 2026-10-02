@@ -7,9 +7,10 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
-/** Выдаёт JDBC-соединения; настройки читает из db.properties в classpath. */
 public class DatabaseManager {
 
     private final String url;
@@ -29,6 +30,20 @@ public class DatabaseManager {
         this.url = props.getProperty("db.url");
         this.user = props.getProperty("db.user");
         this.password = props.getProperty("db.password");
+    }
+
+    public void runScript(String resource) {
+        try (InputStream in = DatabaseManager.class.getResourceAsStream(resource)) {
+            if (in == null) {
+                throw new DatabaseException("Скрипт " + resource + " не найден", null);
+            }
+            String sql = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
+                statement.execute(sql);
+            }
+        } catch (IOException | SQLException e) {
+            throw new DatabaseException("Ошибка выполнения скрипта " + resource + ": " + e.getMessage(), e);
+        }
     }
 
     public Connection getConnection() {
