@@ -25,6 +25,15 @@ public class Input {
         }
     }
 
+    public int promptInt(String message) {
+        String text = prompt(message);
+        try {
+            return Integer.parseInt(text);
+        } catch (NumberFormatException e) {
+            throw new BusinessException("Нужно ввести целое число, а не '" + text + "'");
+        }
+    }
+
     public BigDecimal promptDecimalOrNull(String message) {
         String text = prompt(message);
         if (text.isEmpty()) {

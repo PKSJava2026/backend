@@ -12,13 +12,15 @@ public class CustomerMenu extends Menu {
     private final OrderService orderService;
     private final ContractMenu contracts;
     private final NotificationMenu notificationMenu;
+    private final RatingMenu ratingMenu;
 
     public CustomerMenu(Input input, OrderService orderService, ContractMenu contracts,
-                        NotificationMenu notificationMenu) {
+                        NotificationMenu notificationMenu, RatingMenu ratingMenu) {
         super(input);
         this.orderService = orderService;
         this.contracts = contracts;
         this.notificationMenu = notificationMenu;
+        this.ratingMenu = ratingMenu;
     }
 
     public void run(User customer) {
@@ -33,6 +35,7 @@ public class CustomerMenu extends Menu {
             System.out.println("6. Удалить заявку");
             System.out.println("7. Мои договоры");
             System.out.println("8. " + notificationMenu.label(customer));
+            System.out.println("9. Оценить услугу экспедитора");
             System.out.println("0. Выйти из аккаунта");
 
             switch (input.prompt("Выберите действие: ")) {
@@ -44,6 +47,7 @@ public class CustomerMenu extends Menu {
                 case "6" -> safely(() -> deleteOrder(customer));
                 case "7" -> contracts.run(customer);
                 case "8" -> notificationMenu.run(customer);
+                case "9" -> ratingMenu.rateServiceAsCustomer(customer);
                 case "0" -> {
                     return;
                 }
