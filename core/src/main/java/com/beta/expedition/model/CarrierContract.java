@@ -8,6 +8,7 @@ import lombok.Setter;
 public class CarrierContract extends AbstractContract {
 
     private Long carrierId;
+    private Long cooperationId;
 
     @Override
     public Long getCounterpartyId() {
