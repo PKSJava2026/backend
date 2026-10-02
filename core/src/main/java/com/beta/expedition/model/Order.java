@@ -7,6 +7,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 @Getter
 @Setter
@@ -23,6 +24,10 @@ public class Order {
     private LocalDate desiredDate;
     private OrderStatus status = OrderStatus.NEW;
     private OffsetDateTime createdAt;
+
+    public LocalDate getCreatedDate() {
+        return createdAt.atZoneSameInstant(ZoneId.systemDefault()).toLocalDate();
+    }
 
     @Override
     public String toString() {

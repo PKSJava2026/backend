@@ -6,6 +6,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 @Getter
 @Setter
@@ -21,6 +22,10 @@ public abstract class AbstractContract implements Contract {
     private ContractStatus status = ContractStatus.PENDING;
     private Long createdBy;
     private OffsetDateTime createdAt;
+
+    public LocalDate getCreatedDate() {
+        return createdAt.atZoneSameInstant(ZoneId.systemDefault()).toLocalDate();
+    }
 
     @Override
     public String toString() {
