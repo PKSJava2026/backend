@@ -28,16 +28,19 @@ public class ContractService<T extends AbstractContract> {
     private final ContractChangeRequestRepository requests;
     private final OrderService orders;
     private final CarrierDirectory carriers;
+    private final NotificationService notifications;
     private final LongFunction<T> newContract;
 
     public ContractService(ContractKind kind, ContractRepository<T> contracts,
                            ContractChangeRequestRepository requests, OrderService orders,
-                           CarrierDirectory carriers, LongFunction<T> newContract) {
+                           CarrierDirectory carriers, NotificationService notifications,
+                           LongFunction<T> newContract) {
         this.kind = kind;
         this.contracts = contracts;
         this.requests = requests;
         this.orders = orders;
         this.carriers = carriers;
+        this.notifications = notifications;
         this.newContract = newContract;
     }
 
@@ -76,7 +79,11 @@ public class ContractService<T extends AbstractContract> {
         contract.setStartDate(startDate);
         contract.setEndDate(endDate);
         contract.setStatus(ContractStatus.PENDING);
-        return contracts.save(contract);
+        contracts.save(contract);
+        notifications.notify(counterpartyId, "Экспедитор #" + forwarderId + " предлагает договор #"
+                + contract.getId() + " " + kind.getTitle() + " по заявке #" + orderId + ", цена "
+                + price + ". Подтвердите или отклоните его в разделе договоров", null);
+        return contract;
     }
 
     public void accept(long actorId, long contractId) {
@@ -86,12 +93,16 @@ public class ContractService<T extends AbstractContract> {
         }
         contract.setStatus(ContractStatus.ACTIVE);
         contracts.update(contract);
+        notifications.notify(contract.getForwarderId(), kind.getCounterparty() + " #" + actorId
+                + " подтвердил договор #" + contractId, null);
     }
 
     public void reject(long actorId, long contractId) {
         T contract = getOwnPending(actorId, contractId);
         contract.setStatus(ContractStatus.REJECTED);
         contracts.update(contract);
+        notifications.notify(contract.getForwarderId(), kind.getCounterparty() + " #" + actorId
+                + " отклонил договор #" + contractId, null);
     }
 
     public T get(long contractId) {
@@ -133,12 +144,16 @@ public class ContractService<T extends AbstractContract> {
         request.setProposedTerms(blankToNull(terms));
         request.setProposedStartDate(startDate);
         request.setProposedEndDate(endDate);
-        return requests.save(request);
+        requests.save(request);
+        notifyOtherSide(contract, request, "предлагает изменить договор");
+        return request;
     }
 
     public ContractChangeRequest requestTermination(long actorId, Party party, long contractId) {
         T contract = requireActive(get(actorId, party, contractId));
-        return requests.save(newRequest(actorId, contract, ChangeRequestType.TERMINATE));
+        ContractChangeRequest request = requests.save(newRequest(actorId, contract, ChangeRequestType.TERMINATE));
+        notifyOtherSide(contract, request, "предлагает расторгнуть договор");
+        return request;
     }
 
     public List<ContractChangeRequest> listPendingRequests(long actorId, Party party) {
@@ -160,6 +175,8 @@ public class ContractService<T extends AbstractContract> {
             apply(request, requireActive(contract));
         }
         requests.resolve(requestId, accept ? ChangeRequestStatus.ACCEPTED : ChangeRequestStatus.REJECTED);
+        notifications.notify(request.getInitiatedBy(), "Ваш запрос #" + requestId + " по договору #"
+                + contract.getId() + (accept ? " принят" : " отклонён"), requestId);
     }
 
     public void cancelRequest(long actorId, long requestId) {
@@ -168,6 +185,15 @@ public class ContractService<T extends AbstractContract> {
             throw new BusinessException("Отозвать запрос может только его автор");
         }
         requests.resolve(requestId, ChangeRequestStatus.CANCELLED);
+        notifyOtherSide(get(request.getContractId()), request, "отозвал запрос по договору");
+    }
+
+    private void notifyOtherSide(T contract, ContractChangeRequest request, String action) {
+        boolean initiatedByCounterparty = request.getInitiatedBy().equals(contract.getCounterpartyId());
+        long recipient = initiatedByCounterparty ? contract.getForwarderId() : contract.getCounterpartyId();
+        String author = initiatedByCounterparty ? kind.getCounterparty() : "Экспедитор";
+        notifications.notify(recipient, author + " #" + request.getInitiatedBy() + " " + action + " #"
+                + contract.getId() + " (запрос #" + request.getId() + ")", request.getId());
     }
 
     private void apply(ContractChangeRequest request, T contract) {
