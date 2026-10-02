@@ -3,17 +3,16 @@ package com.beta.expedition;
 import com.beta.expedition.exception.DatabaseException;
 import com.beta.expedition.util.DatabaseManager;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Scanner;
 
 public class Main {
 
     public static void main(String[] args) {
         DatabaseManager db = new DatabaseManager();
-        try (Connection ignored = db.getConnection()) {
-            System.out.println("Подключение к базе данных установлено");
-        } catch (DatabaseException | SQLException e) {
+        try {
+            db.runScript("/schema.sql");
+            System.out.println("База данных готова");
+        } catch (DatabaseException e) {
             System.out.println("Ошибка: " + e.getMessage());
             return;
         }
