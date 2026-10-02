@@ -7,6 +7,7 @@ import com.beta.expedition.console.CustomerMenu;
 import com.beta.expedition.console.ForwarderMenu;
 import com.beta.expedition.console.Input;
 import com.beta.expedition.console.NotificationMenu;
+import com.beta.expedition.console.RatingMenu;
 import com.beta.expedition.exception.DatabaseException;
 import com.beta.expedition.model.CarrierContract;
 import com.beta.expedition.model.ContractKind;
@@ -18,12 +19,14 @@ import com.beta.expedition.repository.ContractChangeRequestRepository;
 import com.beta.expedition.repository.CustomerContractRepository;
 import com.beta.expedition.repository.NotificationRepository;
 import com.beta.expedition.repository.OrderRepository;
+import com.beta.expedition.repository.RatingRepository;
 import com.beta.expedition.repository.UserRepository;
 import com.beta.expedition.service.AuthService;
 import com.beta.expedition.service.CarrierDirectory;
 import com.beta.expedition.service.ContractService;
 import com.beta.expedition.service.NotificationService;
 import com.beta.expedition.service.OrderService;
+import com.beta.expedition.service.RatingService;
 import com.beta.expedition.util.DatabaseManager;
 
 public class Main {
@@ -63,15 +66,19 @@ public class Main {
                     return contract;
                 });
 
+        RatingService ratingService = new RatingService(new RatingRepository(db), orderService,
+                customerContracts, carrierContracts);
+
         Input input = new Input();
+        RatingMenu ratingMenu = new RatingMenu(input, ratingService);
         NotificationMenu notificationMenu = new NotificationMenu(input, notificationService);
         CustomerMenu customerMenu = new CustomerMenu(input, orderService,
-                new ContractMenu(input, customerContracts, Party.COUNTERPARTY), notificationMenu);
+                new ContractMenu(input, customerContracts, Party.COUNTERPARTY), notificationMenu, ratingMenu);
         ForwarderMenu forwarderMenu = new ForwarderMenu(input, orderService,
                 new ContractMenu(input, customerContracts, Party.FORWARDER),
-                new ContractMenu(input, carrierContracts, Party.FORWARDER), notificationMenu);
+                new ContractMenu(input, carrierContracts, Party.FORWARDER), notificationMenu, ratingMenu);
         CarrierMenu carrierMenu = new CarrierMenu(input,
-                new ContractMenu(input, carrierContracts, Party.COUNTERPARTY), notificationMenu);
+                new ContractMenu(input, carrierContracts, Party.COUNTERPARTY), notificationMenu, ratingMenu);
         new ConsoleApp(input, authService, customerMenu, forwarderMenu, carrierMenu).run();
     }
 }
